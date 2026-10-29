@@ -1,11 +1,16 @@
 INSTALLER SUR TELEPHONE (gratuit)
 
-1. Hebergez ce dossier sur une page web en HTTPS. Le plus simple : Netlify Drop
-   (app.netlify.com/drop) -> glissez-deposez le dossier, vous obtenez une adresse.
+IMPORTANT : index.html, manifest.webmanifest, sw.js et les deux icones doivent
+etre a la RACINE de l'adresse web (pas dans un sous-dossier du depot).
+
+1. Hebergez le CONTENU du dossier en HTTPS (pas le dossier lui-meme).
+   - Netlify Drop (app.netlify.com/drop) : glissez le dossier, vous obtenez une adresse.
+   - ou GitHub Pages : fichiers a la racine du depot, Settings > Pages > branche main, dossier /(root).
    Une adresse par outil : ne melangez pas les deux dossiers.
-2. Ouvrez l'adresse sur le telephone.
-   - iPhone : Safari -> Partager -> "Sur l'ecran d'accueil".
-   - Android : Chrome -> menu -> "Installer l'application".
+2. Ouvrez l'adresse sur le telephone (Safari sur iPhone, Chrome sur Android).
+   - iPhone : Partager -> "Sur l'ecran d'accueil".
+   - Android : menu -> "Installer l'application" (ou "Ajouter a l'ecran d'accueil").
+   Si l'option n'apparait pas : rechargez la page une fois, attendez quelques secondes, rouvrez le menu.
 3. L'icone apparait ; l'outil s'ouvre en plein ecran et marche hors ligne
    apres la premiere ouverture.
 
@@ -13,4 +18,4 @@ Dans cette version, Claude n'est pas accessible : utilisez la methode
 "Sans acces a Claude" (copier la consigne, la coller dans Claude, Gemini ou
 ChatGPT avec la photo du croquis, puis coller la reponse). Le fichier .vecXml
 et l'image .png se telechargent ensuite directement, avec la bonne extension.
-Pour mettre a jour : remplacez les fichiers et changez la version dans sw.js (plan-liciel-v5).
+Pour mettre a jour : remplacez les fichiers et changez la version dans sw.js (plan-liciel-v6).
