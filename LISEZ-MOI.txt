@@ -1,0 +1,16 @@
+INSTALLER SUR TELEPHONE (gratuit)
+
+1. Hebergez ce dossier sur une page web en HTTPS. Le plus simple : Netlify Drop
+   (app.netlify.com/drop) -> glissez-deposez le dossier, vous obtenez une adresse.
+   Une adresse par outil : ne melangez pas les deux dossiers.
+2. Ouvrez l'adresse sur le telephone.
+   - iPhone : Safari -> Partager -> "Sur l'ecran d'accueil".
+   - Android : Chrome -> menu -> "Installer l'application".
+3. L'icone apparait ; l'outil s'ouvre en plein ecran et marche hors ligne
+   apres la premiere ouverture.
+
+Dans cette version, Claude n'est pas accessible : utilisez la methode
+"Sans acces a Claude" (copier la consigne, la coller dans Claude, Gemini ou
+ChatGPT avec la photo du croquis, puis coller la reponse). Le fichier .vecXml
+et l'image .png se telechargent ensuite directement, avec la bonne extension.
+Pour mettre a jour : remplacez les fichiers et changez la version dans sw.js (plan-liciel-v5).

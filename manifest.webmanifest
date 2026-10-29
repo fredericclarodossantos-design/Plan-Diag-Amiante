@@ -1,0 +1,22 @@
+{
+ "name": "Plan Liciel",
+ "short_name": "Plan Liciel",
+ "start_url": ".",
+ "scope": ".",
+ "display": "standalone",
+ "background_color": "#EDF0F2",
+ "theme_color": "#0B5C73",
+ "lang": "fr",
+ "icons": [
+  {
+   "src": "icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  }
+ ]
+}

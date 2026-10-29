@@ -1,0 +1,612 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0B5C73">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Plan Liciel">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<title>Plan Liciel</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  /* Mise en page : carnet de terrain. Bandeau hachuré de signalisation, dossier actif, bilan des résultats,
+     puis saisie (à gauche) et liste (à droite) sur grand écran ; deux onglets sur téléphone. */
+  --font-display:'Barlow Condensed','Arial Narrow',Arial,sans-serif;
+  --font-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --bg:#EDF0F2; --surface:#FFFFFF; --surface-2:#F5F7F8;
+  --ink:#15212A; --ink-2:#4D5E69; --line:#D3DBE0; --line-strong:#AEBBC3;
+  --accent:#0B5C73; --accent-ink:#FFFFFF; --accent-soft:#DAEAF0; --focus:#0B5C73;
+  --stripe-a:#F2B705; --stripe-b:#1B232A;
+  --ok:#17744A; --ok-soft:#DDF0E5;
+  --bad:#B3261E; --bad-soft:#F8E0DE;
+  --wait:#8A5700; --wait-soft:#FBEBC8;
+  --na:#56636C; --na-soft:#E3E8EB;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1418; --surface:#151F25; --surface-2:#1B2830;
+    --ink:#E7EDF0; --ink-2:#9DAEB8; --line:#263640; --line-strong:#3D5563;
+    --accent:#62BCD4; --accent-ink:#06222B; --accent-soft:#153542; --focus:#62BCD4;
+    --stripe-a:#F2B705; --stripe-b:#0D1418;
+    --ok:#4CC38A; --ok-soft:#12301F;
+    --bad:#FF8F85; --bad-soft:#3A1B19;
+    --wait:#F0B954; --wait-soft:#3A2C10;
+    --na:#A5B2BA; --na-soft:#222E35;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1418; --surface:#151F25; --surface-2:#1B2830;
+  --ink:#E7EDF0; --ink-2:#9DAEB8; --line:#263640; --line-strong:#3D5563;
+  --accent:#62BCD4; --accent-ink:#06222B; --accent-soft:#153542; --focus:#62BCD4;
+  --stripe-a:#F2B705; --stripe-b:#0D1418;
+  --ok:#4CC38A; --ok-soft:#12301F;
+  --bad:#FF8F85; --bad-soft:#3A1B19;
+  --wait:#F0B954; --wait-soft:#3A2C10;
+  --na:#A5B2BA; --na-soft:#222E35;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%}
+h1,h2{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.mono{font-family:var(--font-mono)}
+
+.stripe{height:8px;background:repeating-linear-gradient(-45deg,var(--stripe-a) 0 10px,var(--stripe-b) 10px 20px)}
+.wrap{max-width:1200px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top .wrap{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding-block:14px 12px}
+h1{font-family:var(--font-display);font-weight:700;font-size:1.95rem;line-height:1;letter-spacing:.015em;text-transform:uppercase}
+.sub{margin:5px 0 0;color:var(--ink-2);font-size:.85rem}
+.sync{display:inline-flex;align-items:center;gap:7px;font-size:.78rem;color:var(--ink-2);text-align:right}
+.sync::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--na)}
+.sync[data-state="cloud"]::before{background:var(--ok)}
+.sync[data-state="saving"]::before{background:var(--wait)}
+.sync[data-state="error"]{color:var(--bad)}
+.sync[data-state="error"]::before{background:var(--bad)}
+
+.page{display:flex;flex-direction:column;gap:14px;padding-block:6px 40px}
+#app{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px}
+
+.empty{padding:26px 20px;display:flex;flex-direction:column;gap:12px;max-width:620px}
+.empty h2{font-family:var(--font-display);font-size:1.5rem;font-weight:600;text-transform:uppercase;letter-spacing:.02em}
+.empty p{margin:0;color:var(--ink-2)}
+.row{display:flex;flex-wrap:wrap;gap:10px}
+
+.dossier{padding:14px;display:flex;flex-direction:column;gap:10px}
+.dossier-row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.dossier-row .fld{flex:1 1 240px}
+.meta{margin:0;color:var(--ink-2);font-size:.85rem;overflow-wrap:anywhere}
+
+.summary{padding:14px;display:flex;flex-direction:column;gap:10px}
+.sum-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.sum-count{font-family:var(--font-display);font-size:1.6rem;font-weight:600;line-height:1}
+.sum-count small{font-family:var(--font-body);font-size:.85rem;font-weight:400;color:var(--ink-2);margin-left:4px}
+.sumbar{display:flex;height:12px;border-radius:2px;overflow:hidden;background:var(--na-soft);gap:2px}
+.sumbar span{flex:1 1 0;min-width:4px}
+.s-present{background:var(--bad)} .s-absent{background:var(--ok)} .s-attente{background:var(--wait)} .s-nonanalyse{background:var(--na)}
+.legend{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.85rem}
+.legend li{display:inline-flex;align-items:center;gap:6px}
+.legend .dot{width:10px;height:10px;border-radius:2px}
+.legend li.zero{color:var(--ink-2)}
+.legend b{font-family:var(--font-mono);font-weight:500}
+
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.tabs button{min-height:44px;border:1px solid var(--line-strong);background:var(--surface);border-radius:4px;font-weight:600;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+.cols{display:grid;gap:14px}
+@media (max-width:899px){
+  .cols[data-view="saisie"] #view-liste{display:none}
+  .cols[data-view="liste"] #view-saisie{display:none}
+}
+@media (min-width:900px){
+  .cols{grid-template-columns:minmax(380px,450px) minmax(0,1fr);align-items:start}
+  .tabs{display:none}
+}
+
+.panel-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:14px 14px 0}
+.panel-h h2{font-family:var(--font-display);font-size:1.35rem;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.count{color:var(--ink-2);font-size:.85rem}
+form{margin:0}
+fieldset{border:0;margin:0;padding:12px 14px 4px;min-width:0}
+legend{padding:0;margin-bottom:10px;font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);width:100%;display:flex;align-items:center;gap:10px}
+legend::after{content:"";flex:1;height:1px;background:var(--line)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.full{grid-column:1/-1}
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fld>span{font-size:.72rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2)}
+input[type="text"],input:not([type]),input[type="date"],input[type="search"],select,textarea{
+  width:100%;min-width:0;min-height:44px;padding:9px 11px;font-size:16px;
+  background:var(--surface-2);border:1px solid var(--line-strong);border-radius:4px}
+textarea{resize:vertical}
+input::placeholder,textarea::placeholder{color:var(--ink-2);opacity:.7}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--focus);outline-offset:1px;border-color:var(--accent)}
+
+.seg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.seg label,.chips label{position:relative;display:block;min-width:0}
+.seg input,.chips input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.seg span,.chips span{display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:6px 8px;text-align:center;
+  background:var(--surface-2);border:1px solid var(--line-strong);border-radius:4px;font-size:.9rem;font-weight:500;letter-spacing:0;text-transform:none;color:var(--ink)}
+.seg input:checked+span::before,.chips input:checked+span::before{content:"\2713";font-weight:700}
+.seg input:checked+span,.chips input:checked+span{font-weight:600;border-color:currentColor}
+.seg input:focus-visible+span,.chips input:focus-visible+span{outline:2px solid var(--focus);outline-offset:2px}
+.r-attente input:checked+span{background:var(--wait-soft);color:var(--wait)}
+.r-present input:checked+span{background:var(--bad-soft);color:var(--bad)}
+.r-absent input:checked+span{background:var(--ok-soft);color:var(--ok)}
+.r-nonanalyse input:checked+span{background:var(--na-soft);color:var(--na)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips label{flex:1 1 120px}
+.chips input:checked+span{background:var(--bad-soft);color:var(--bad)}
+
+.err{margin:6px 14px 0;padding:9px 11px;border-radius:4px;background:var(--bad-soft);color:var(--bad);font-size:.88rem;font-weight:500}
+.f-actions{display:flex;flex-wrap:wrap;gap:10px;padding:14px}
+.f-actions .btn-primary{flex:1 1 200px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:8px 16px;border-radius:4px;
+  border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font-weight:600;font-size:.92rem;cursor:pointer;text-align:center}
+.btn:hover{border-color:var(--ink-2)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover{border-color:var(--accent);filter:brightness(1.08)}
+.btn-danger{color:var(--bad);border-color:var(--bad)}
+.btn-danger.armed{background:var(--bad);color:var(--surface)}
+.btn-quiet{min-height:36px;padding:4px 10px;border-color:transparent;background:transparent;color:var(--accent);font-size:.85rem}
+.btn-quiet.btn-danger{color:var(--bad)}
+.btn-quiet.btn-danger.armed{background:var(--bad);color:var(--surface)}
+
+.search{padding:10px 14px 12px;border-bottom:1px solid var(--line)}
+.list{list-style:none;margin:0;padding:0}
+.item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 12px;padding:12px 14px;border-top:1px solid var(--line);align-items:start}
+.item:first-child{border-top:0}
+.tag{grid-row:1/3;align-self:start;min-width:3.4em;padding:3px 7px;text-align:center;font-family:var(--font-mono);font-size:.85rem;font-weight:500;border:1.5px solid var(--ink);border-radius:2px}
+.item.editing{background:var(--accent-soft)}
+.l1{font-weight:600;overflow-wrap:anywhere}
+.l1 em{font-style:normal;font-weight:400;color:var(--ink-2)}
+.l2,.l3{font-size:.85rem;color:var(--ink-2);overflow-wrap:anywhere}
+.item .pill{grid-column:3;grid-row:1}
+.acts{grid-column:2/4;display:flex;flex-wrap:wrap;gap:2px 4px;margin:4px 0 0 -10px}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:.76rem;font-weight:600;white-space:nowrap}
+.pill::before{font-size:.7rem}
+.pill-bad{background:var(--bad-soft);color:var(--bad)} .pill-bad::before{content:"\25B2"}
+.pill-ok{background:var(--ok-soft);color:var(--ok)} .pill-ok::before{content:"\2713"}
+.pill-wait{background:var(--wait-soft);color:var(--wait)} .pill-wait::before{content:"\2026"}
+.pill-na{background:var(--na-soft);color:var(--na)} .pill-na::before{content:"\2013"}
+.none{padding:22px 14px;color:var(--ink-2)}
+.more{border-top:1px solid var(--line);padding:10px 14px}
+.more summary{cursor:pointer;font-size:.85rem;font-weight:600;color:var(--accent);min-height:32px;display:flex;align-items:center}
+.more .row{padding-top:8px}
+.hint{margin:10px 16px 0;color:var(--ink-2);font-size:.85rem}
+.hint.warn{color:var(--wait);font-weight:500}
+.sum-actions{display:flex;flex-wrap:wrap;gap:10px}
+
+dialog{padding:0;border:1px solid var(--line-strong);border-radius:6px;background:var(--surface);color:var(--ink);width:min(580px,calc(100% - 24px));max-height:calc(100% - 24px);overflow:auto}
+dialog::backdrop{background:rgba(8,14,18,.6)}
+.dlg-h{padding:16px 16px 0}
+.dlg-h h2{font-family:var(--font-display);font-size:1.45rem;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.dlg-b{padding:14px 16px 4px}
+.dlg-f{display:flex;flex-wrap:wrap;gap:10px;padding:14px 16px 16px}
+.dlg-f .btn-primary{flex:1 1 160px}
+
+.toast{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;pointer-events:none;
+  padding:0 max(16px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:50}
+.toast span{background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:4px;font-size:.9rem;font-weight:500;max-width:520px;box-shadow:0 4px 18px rgba(0,0,0,.28)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+
+.quick{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.qchip{font:inherit;font-size:12px;padding:4px 9px;border:1px solid var(--line,#c9ced3);border-radius:999px;background:transparent;color:inherit;cursor:pointer}
+.qchip:hover,.qchip:focus-visible{border-color:currentColor}
+
+
+.photo-bar{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.photo-btn{cursor:pointer}
+.photo-prev{display:block;max-width:100%;max-height:220px;margin-top:8px;border:1px solid var(--line-strong);border-radius:6px}
+
+#dlg-vec{width:min(720px,calc(100% - 24px))}
+.vec-hint{margin:0 0 10px}
+.vec-msg{color:var(--ink);font-weight:600;border-left:3px solid var(--accent);padding-left:10px}
+.vec-opts{margin-top:10px}
+.vec-chk{display:flex;align-items:center;gap:10px;min-height:44px;font-size:.9rem}
+.vec-chk input{width:20px;height:20px;flex:none}
+.vec-prev{margin-top:10px;border:1px solid var(--line-strong);border-radius:6px;background:var(--surface);overflow:auto}
+.vec-prev:empty{display:none}
+.vec-prev svg{display:block;width:100%;height:auto;max-height:62vh}
+#vec-notes{margin:8px 0 0;padding-left:18px;color:var(--ink-2);font-size:.85rem}
+#vec-notes:empty{display:none}
+#dlg-vec .dlg-b .hint{margin-left:0;margin-right:0}
+.vec-manual{margin-top:12px;border-top:1px solid var(--line);padding-top:8px}
+.vec-manual summary{cursor:pointer;font-size:.85rem;font-weight:600;color:var(--accent);min-height:36px;display:flex;align-items:center}
+#vec-promptbox,#vec-paste{margin-top:8px}
+
+.vec-body{padding:12px 14px 4px}
+.vec-card{max-width:760px}
+#vec-tools .hint{margin-left:0;margin-right:0}
+.vec-hint{margin:0 0 10px}
+.vec-msg{color:var(--ink);font-weight:600;border-left:3px solid var(--accent);padding-left:10px}
+.vec-opts{margin-top:10px}
+.vec-chk{display:flex;align-items:center;gap:10px;min-height:44px;font-size:.9rem}
+.vec-chk input{width:20px;height:20px;flex:none}
+.vec-prev{margin-top:10px;border:1px solid var(--line-strong);border-radius:6px;background:var(--surface);overflow:auto}
+.vec-prev:empty{display:none}
+.vec-prev svg{display:block;width:100%;height:auto;max-height:62vh}
+#vec-notes{margin:8px 0 0;padding-left:18px;color:var(--ink-2);font-size:.85rem}
+#vec-notes:empty{display:none}
+.vec-manual{margin-top:12px;border-top:1px solid var(--line);padding-top:8px}
+.vec-manual summary{cursor:pointer;font-size:.85rem;font-weight:600;color:var(--accent);min-height:36px;display:flex;align-items:center}
+#vec-promptbox,#vec-paste{margin-top:8px}
+
+</style>
+<div class="stripe" aria-hidden="true"></div>
+<header class="top">
+  <div class="wrap">
+    <div>
+      <h1>Plan Liciel</h1>
+      <p class="sub">Croquis à main levée · fichier .vecXml et image .png</p>
+    </div>
+  </div>
+</header>
+<main class="wrap page">
+<section class="card vec-card" id="vec-tools">
+  <div class="panel-h"><h2>Croquis</h2></div>
+  <div class="vec-body">
+    <p class="hint vec-hint">Photographiez votre croquis. Le plan est lu, redressé et calé sur la grille de Liciel, puis enregistré en fichier .vecXml. Il n’y a pas de cotes : l’échelle est approximative.</p>
+    <div class="photo-bar">
+      <label class="btn btn-primary photo-btn">Photo du croquis<input type="file" id="vec-cam" accept="image/*" capture="environment" hidden></label>
+      <label class="btn photo-btn">Galerie<input type="file" id="vec-gal" accept="image/*" hidden></label>
+      <button type="button" class="btn" id="vec-redo" disabled>Relire</button>
+      <button type="button" class="btn btn-quiet btn-danger" id="vec-stop" hidden>Arrêter</button>
+    </div>
+    <img id="vec-thumb" class="photo-prev" alt="Croquis photographié" hidden>
+    <div class="grid vec-opts">
+      <label class="fld full"><span>Nom du plan</span><input type="text" id="vec-titre"></label>
+      <label class="vec-chk full"><input type="checkbox" id="vec-mirror"> Inverser gauche et droite (photo prise en miroir)</label>
+    </div>
+    <p class="hint" id="vec-status" role="status">Aucun croquis pour l’instant.</p>
+    <div class="vec-prev" id="vec-prev"></div>
+    <ul id="vec-notes"></ul>
+    <p class="hint">Les portes sont posées à leur taille standard, leur sens d’ouverture est à vérifier dans Liciel. Le téléchargement donne le fichier .vecXml et une image .png du même plan.</p>
+    <details class="vec-manual" id="vec-manual">
+      <summary>Sans accès à Claude : utiliser une autre IA</summary>
+      <p class="hint">1. Copiez la consigne. 2. Ouvrez Claude, Gemini ou ChatGPT, joignez la photo du croquis, collez la consigne et envoyez. 3. Copiez la réponse, revenez ici et collez-la ci-dessous. Choisissez aussi la photo ici pour que les proportions soient justes.</p>
+      <div class="photo-bar"><button type="button" class="btn" id="vec-copyprompt">Copier la consigne</button></div>
+      <textarea id="vec-promptbox" rows="4" readonly hidden aria-label="Consigne à copier"></textarea>
+      <label class="fld full"><span>Réponse de l’IA</span><textarea id="vec-paste" rows="4" placeholder="Collez ici la réponse, qui commence par {"></textarea></label>
+      <div class="photo-bar"><button type="button" class="btn btn-primary" id="vec-apply">Créer le plan</button></div>
+    </details>
+    <p class="hint vec-msg" id="vec-msg" role="status" hidden></p>
+  </div>
+  <div class="f-actions">
+    <button type="button" class="btn btn-primary" id="vec-save" disabled>Télécharger le plan et l’image</button>
+    <button type="button" class="btn" id="vec-copy" disabled>Copier le XML</button>
+  </div>
+</section>
+
+
+</main>
+<div class="toast" aria-live="polite"><span id="toast-msg" hidden></span></div>
+<script>
+(function(){
+'use strict';
+const $=(s,r)=>(r||document).querySelector(s);
+function el(tag,cls,text){const n=document.createElement(tag);if(cls)n.className=cls;if(text!=null)n.textContent=text;return n;}
+const pad=n=>String(n).padStart(2,'0');
+function slug(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'dossier';}
+async function useCap(name){try{if(window.claude&&window.claude.use)return await window.claude.use(name);}catch(e){}return null;}
+let toastTimer=null;
+function toast(msg){
+  const n=$('#toast-msg');n.textContent=msg;n.hidden=false;
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>{n.hidden=true;},3600);
+}
+
+async function shrink(file){
+  const bmp=await createImageBitmap(file);
+  const k=Math.min(1,1600/Math.max(bmp.width,bmp.height));
+  const c=document.createElement('canvas');c.width=Math.round(bmp.width*k);c.height=Math.round(bmp.height*k);
+  c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);
+  return new Promise(res=>c.toBlob(b=>res(b),'image/jpeg',0.8));
+}
+/* ---------- Plan pour Liciel : photo du croquis → fichier .vecXml ---------- */
+const VEC={assumed:false,blob:null,w:0,h:0,geo:null,xml:'',comp:[],ctl:null,busy:false,url:null};
+const VEC_HEAD='<new_plan><Titre>@TITRE@</Titre><Hauteur>1139</Hauteur><Largeur>700</Largeur><ResolutionH>96</ResolutionH><ResolutionV>96</ResolutionV><Echelle>0,5</Echelle><Couleur_Fond>White</Couleur_Fond><Unite>m</Unite><Epaisseur_murs_Manuelle>False</Epaisseur_murs_Manuelle><Ajouter_Titre>False</Ajouter_Titre><Afficher_Echelle>False</Afficher_Echelle><Afficher_FondDeCarte>True</Afficher_FondDeCarte><Is_Mode_Plan>True</Is_Mode_Plan><Is_Mode_Plan_a_impression>False</Is_Mode_Plan_a_impression><Is_Vue_3D>False</Is_Vue_3D><Size_Police_Lettrage>0</Size_Police_Lettrage><Is_Afficher_Cotes>False</Is_Afficher_Cotes><Sensibilite>20</Sensibilite><Couleur_murs>LightGray</Couleur_murs><Epaisseur_murs>13</Epaisseur_murs><Epaisseur_NP_ignorer_epaisseur_traits_murs>False</Epaisseur_NP_ignorer_epaisseur_traits_murs><Epaisseur_peau_exterieure>20</Epaisseur_peau_exterieure><Calque><Calque_nom>Plan support des calques</Calque_nom><Calque_Verrouiller>False</Calque_Verrouiller><Calque_Visible>True</Calque_Visible><Calque_Composant>';
+const VEC_TAIL='</Calque_Composant><Calque_ComposantSupp></Calque_ComposantSupp></Calque></new_plan>';
+const VEC_PROMPT=[
+'Tu analyses la photo d’un croquis à main levée d’un logement, vue de dessus, sans cotes.',
+'Ignore le quadrillage et les lignes de la feuille, les ombres, les annotations hors plan et le mobilier.',
+'Garde l’image dans le sens où elle est : ne la retourne pas, même si l’écriture semble inversée.',
+'Repère de tes coordonnées : x de 0 (bord gauche de l’image) à 1000 (bord droit), y de 0 (haut) à 1000 (bas).',
+'',
+'Réponds uniquement par un objet JSON de cette forme :',
+'{"murs":[{"x1":0,"y1":0,"x2":0,"y2":0,"ext":true}],"portes":[{"x":0,"y":0}],"fenetres":[{"x1":0,"y1":0,"x2":0,"y2":0}],"textes":[{"t":"Séjour","x":0,"y":0}],"gaines":[{"x1":0,"y1":0,"x2":0,"y2":0}],"notes":["..."]}',
+'',
+'Règles :',
+'- murs : un segment par mur, strictement horizontal (y1 = y2) ou vertical (x1 = x2). Un mur continu est un seul segment, même s’il porte des portes. "ext" vaut true pour les murs de l’enveloppe extérieure du logement, false pour les cloisons. Les murs qui se rejoignent partagent exactement les mêmes coordonnées. Ne trace aucun mur là où le croquis n’en montre pas (pièces ouvertes l’une sur l’autre).',
+'- portes : un point au milieu de chaque porte (flèche ou trait sur un mur), porte d’entrée comprise.',
+'- fenetres : les deux extrémités de chaque fenêtre (traits sur un mur extérieur).',
+'- textes : le nom de chaque pièce, au centre de la pièce, écrit en toutes lettres (Ch devient Chambre, Sej devient Séjour, Cuis devient Cuisine, SdB et WC restent tels quels). Numérote les noms identiques (Chambre 1, Chambre 2). Une pièce sans nom n’a pas de texte.',
+'- gaines : les deux coins opposés de chaque rectangle barré d’une croix. Ses quatre murs sont aussi dans "murs". Liste vide s’il n’y en a pas.',
+'- notes : 4 doutes ou hypothèses au plus (liste vide s’il n’y en a pas).'
+].join('\n');
+const VEC_ERR={not_granted:'L’accès à Claude a été refusé pour cette page.',sampling_disabled:'Claude n’est pas disponible pour ce compte.',rate_limited:'Trop de demandes. Réessayez dans quelques minutes.',image_rejected:'Cette image n’est pas acceptée. Reprenez la photo.',invalid_json:'Le croquis n’a pas pu être lu. Reprenez la photo, bien à plat et bien éclairée.',refused:'Claude n’a pas pu traiter cette image.',cancelled:'Lecture interrompue.',empty_completion:'Pas de réponse. Réessayez.',upstream_error:'Connexion interrompue. Réessayez.'};
+function xesc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function vecKey(){
+  const d=new Date();let r='';for(let i=0;i<16;i++)r+=Math.floor(Math.random()*10);
+  return d.getFullYear()+'_'+pad(d.getMonth()+1)+'_'+pad(d.getDate())+'_'+pad(d.getHours())+'_'+pad(d.getMinutes())+'_'+pad(d.getSeconds())+'_'+r;
+}
+function vecXmlOf(c){
+  const pts='|'+c.p.map(q=>q[0]+';'+q[1]).join('|')+'|';
+  const ep=c.t==='Fenetre'?4:(c.t==='Texte'?3:1);
+  let x='<Composant><DessinType>'+c.t+'</DessinType><ClefComposant>'+vecKey()+'</ClefComposant><EpaisseurTrait>'+ep+'</EpaisseurTrait><Couleur>Black</Couleur><CouleurDeFond>Transparent</CouleurDeFond><Hatchstyle>0</Hatchstyle><DashStyle>0</DashStyle><Texte>'+xesc(c.s||'')+'</Texte><Taille_Texte>'+(c.sz||10)+'</Taille_Texte><Police>Segoe UI</Police><Gras>False</Gras><Souligne>False</Souligne><Italique>False</Italique><Visible>True</Visible><ClefComposant_Appartenance></ClefComposant_Appartenance><Liste_de_points>'+pts+'</Liste_de_points><AlfaColorValue>100</AlfaColorValue>';
+  if(c.t==='PorteG'||c.t==='PorteD')x+='<angle_ouverture>90</angle_ouverture>';
+  else if(c.t==='Fenetre')x+='<fenetre_batante>0</fenetre_batante><angle_ouverture>27</angle_ouverture>';
+  else if(c.t==='Texte')x+='<IS_Lettrage_CREP>False</IS_Lettrage_CREP><IS_MesureCREP>False</IS_MesureCREP><ISTxtPosition_Auto>False</ISTxtPosition_Auto><ISTxtVertical>False</ISTxtVertical>';
+  return x+'</Composant>';
+}
+/* regroupe les valeurs proches (traits qui visent le même mur) */
+function vecCluster(vals,tol){
+  const s=vals.slice().sort((a,b)=>a-b),map=new Map();let g=[];
+  const flush=()=>{if(!g.length)return;const m=g.reduce((a,b)=>a+b,0)/g.length;g.forEach(v=>map.set(v,m));g=[];};
+  s.forEach(v=>{if(g.length&&v-g[g.length-1]>tol)flush();g.push(v);});flush();
+  return v=>{if(map.has(v))return map.get(v);let best=v,d=1e9;map.forEach((m,k)=>{const dd=Math.abs(k-v);if(dd<d){d=dd;best=m;}});return best;};
+}
+/* géométrie lue sur la photo (coordonnées 0-1000) → composants Liciel sur la grille 10 + 20k */
+function vecBuild(geo,o){
+  const W=o.w,H=o.h,num=v=>typeof v==='number'&&isFinite(v);
+  const X=v=>(o.mirror?1000-v:v)/1000*W,Y=v=>v/1000*H;
+  const notes=[],comp=[];
+  const raw=(geo&&geo.murs||[]).filter(m=>m&&[m.x1,m.y1,m.x2,m.y2].every(num)).map(m=>{
+    const x1=X(m.x1),y1=Y(m.y1),x2=X(m.x2),y2=Y(m.y2);
+    return Math.abs(x2-x1)>=Math.abs(y2-y1)
+      ?{h:true,c:(y1+y2)/2,a:Math.min(x1,x2),b:Math.max(x1,x2),ext:!!m.ext}
+      :{h:false,c:(x1+x2)/2,a:Math.min(y1,y2),b:Math.max(y1,y2),ext:!!m.ext};
+  }).filter(w=>w.b-w.a>0.005*Math.max(W,H));
+  if(raw.length<3)return null;
+  const xs=[],ys=[];
+  raw.forEach(w=>{if(w.h){xs.push(w.a,w.b);ys.push(w.c);}else{ys.push(w.a,w.b);xs.push(w.c);}});
+  const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+  const bw=Math.max(1,maxX-minX),bh=Math.max(1,maxY-minY);
+  const cx=vecCluster(xs,0.02*bw),cy=vecCluster(ys,0.02*bh);
+  const s=Math.min(500/bw,920/bh);
+  const snap=v=>Math.round((v-10)/20)*20+10;
+  const gx=v=>snap(110+(cx(v)-minX)*s),gy=v=>snap(110+(cy(v)-minY)*s);
+  const seen=new Map(),walls=[];
+  raw.forEach(w=>{
+    const m=w.h?{h:true,c:gy(w.c),a:gx(w.a),b:gx(w.b)}:{h:false,c:gx(w.c),a:gy(w.a),b:gy(w.b)};
+    if(m.b-m.a<=0)return;
+    const k=[m.h,m.c,m.a,m.b].join();
+    if(seen.has(k)){if(w.ext)seen.get(k).ext=true;return;}
+    m.k=k;m.ext=w.ext;m.o=w;seen.set(k,m);walls.push(m);
+  });
+  walls.forEach(w=>comp.push({t:w.ext?'Mur':'Ligne',p:w.h?[[w.a,w.c],[w.b,w.c]]:[[w.c,w.a],[w.c,w.b]]}));
+  /* ouverture posée sur le mur le plus proche, à sa taille : porte 38, plus petite si le mur est court */
+  const placeOn=(px,py,len)=>{
+    let best=null,bd=1e9;
+    walls.forEach(w=>{
+      const r=w.o;let d,t;
+      if(r.h){const q=Math.min(Math.max(px,r.a),r.b);d=Math.hypot(px-q,py-r.c);t=(q-r.a)/(r.b-r.a);}
+      else{const q=Math.min(Math.max(py,r.a),r.b);d=Math.hypot(px-r.c,py-q);t=(q-r.a)/(r.b-r.a);}
+      if(d<bd){bd=d;best={w,t};}
+    });
+    if(!best||bd>0.07*Math.max(W,H))return null;
+    const w=best.w,ML=w.b-w.a,L=len(ML);
+    let u=w.a+ML*best.t;
+    const lo=w.a+L/2+2,hi=w.b-L/2-2;
+    u=lo<=hi?Math.min(Math.max(u,lo),hi):(w.a+w.b)/2;
+    const u1=Math.round(u-L/2),u2=Math.round(u+L/2);
+    return w.h?[[u1,w.c],[u2,w.c]]:[[w.c,u1],[w.c,u2]];
+  };
+  let lost=0;
+  (geo.portes||[]).forEach(d=>{
+    if(!d||!num(d.x)||!num(d.y))return;
+    const p=placeOn(X(d.x),Y(d.y),ML=>ML>=60?38:Math.max(20,ML-12));
+    if(p)comp.push({t:'PorteG',p});else lost++;
+  });
+  (geo.fenetres||[]).forEach(f=>{
+    if(!f||![f.x1,f.y1,f.x2,f.y2].every(num))return;
+    const x1=X(f.x1),y1=Y(f.y1),x2=X(f.x2),y2=Y(f.y2),L=Math.round(Math.hypot(x2-x1,y2-y1)*s);
+    const p=placeOn((x1+x2)/2,(y1+y2)/2,ML=>Math.max(12,Math.min(Math.max(L,30),Math.min(100,ML-8))));
+    if(p)comp.push({t:'Fenetre',p});else lost++;
+  });
+  if(lost)notes.push(lost+' porte(s) ou fenêtre(s) trop loin d’un mur n’ont pas été placées.');
+  (geo.textes||[]).forEach(t=>{
+    const str=String(t&&t.t||'').trim();
+    if(!str||!num(t.x)||!num(t.y))return;
+    const n=str.length,sz=n>9?12:15;
+    const tx=110+(X(t.x)-minX)*s,ty=110+(Y(t.y)-minY)*s;
+    comp.push({t:'Texte',s:str,sz,p:[[Math.round(tx-n*sz*0.26),Math.round(ty-sz*0.7)]]});
+  });
+  (geo.gaines||[]).forEach(g=>{
+    if(!g||![g.x1,g.y1,g.x2,g.y2].every(num))return;
+    const a=gx(X(g.x1)),b=gx(X(g.x2)),c=gy(Y(g.y1)),d=gy(Y(g.y2));
+    if(a===b||c===d)return;
+    comp.push({t:'Ligne',p:[[a,c],[b,d]]},{t:'Ligne',p:[[b,c],[a,d]]});
+  });
+  return {comp,notes};
+}
+function vecPreview(comp){
+  const box=$('#vec-prev');box.textContent='';
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  comp.forEach(c=>c.p.forEach(q=>{x0=Math.min(x0,q[0]);y0=Math.min(y0,q[1]);x1=Math.max(x1,q[0]);y1=Math.max(y1,q[1]);}));
+  const NS='http://www.w3.org/2000/svg',pd=30;
+  const svg=document.createElementNS(NS,'svg');
+  svg.setAttribute('viewBox',(x0-pd)+' '+(y0-pd)+' '+(x1-x0+2*pd)+' '+(y1-y0+2*pd));
+  svg.setAttribute('role','img');svg.setAttribute('aria-label','Aperçu du plan');
+  const add=(tag,attrs,text)=>{const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;svg.append(e);};
+  const ST={Mur:['var(--ink-2)',9],Ligne:['var(--ink)',2],Fenetre:['var(--accent)',5],PorteG:['var(--bad)',3],PorteD:['var(--bad)',3]};
+  comp.forEach(c=>{
+    if(c.t==='Texte'){add('text',{x:c.p[0][0],y:c.p[0][1]+c.sz*0.8,'font-size':c.sz,fill:'var(--ink)','font-family':'Segoe UI, system-ui, sans-serif'},c.s);return;}
+    const a=c.p[0],b=c.p[1],st=ST[c.t];
+    if(c.t!=='Mur'&&c.t!=='Ligne')add('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:'var(--surface)','stroke-width':11});
+    add('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:st[0],'stroke-width':st[1]});
+  });
+  box.append(svg);
+}
+function vecRefresh(){
+  const st=$('#vec-status'),nl=$('#vec-notes');
+  nl.textContent='';VEC.xml='';
+  if(!VEC.geo){setVecUi();return;}
+  const r=vecBuild(VEC.geo,{w:VEC.w,h:VEC.h,mirror:$('#vec-mirror').checked});
+  if(!r){st.textContent='Aucun mur reconnu. Reprenez la photo, bien à plat, au stylo foncé sur fond clair.';$('#vec-prev').textContent='';setVecUi();return;}
+  const titre=($('#vec-titre').value||'Plan').trim()||'Plan';
+  VEC.xml=VEC_HEAD.replace('@TITRE@',xesc(titre))+r.comp.map(vecXmlOf).join('')+VEC_TAIL;
+  try{
+    const d=new DOMParser().parseFromString(VEC.xml,'application/xml');
+    if(d.getElementsByTagName('parsererror').length){VEC.xml='';st.textContent='Le fichier généré est invalide. Réessayez.';setVecUi();return;}
+  }catch(e){}
+  VEC.comp=r.comp;
+  vecPreview(r.comp);
+  const nb=t=>r.comp.filter(c=>c.t===t).length;
+  st.textContent='Plan prêt : '+(nb('Mur')+nb('Ligne'))+' murs, '+(nb('PorteG')+nb('PorteD'))+' portes, '+nb('Fenetre')+' fenêtres, '+nb('Texte')+' pièces.';
+  const all=[].concat((VEC.geo.notes||[]).filter(x=>typeof x==='string').slice(0,4),r.notes);
+  all.forEach(t=>nl.append(el('li',null,t)));
+  setVecUi();
+}
+function setVecUi(){
+  const ok=!!VEC.xml&&!VEC.busy;
+  $('#vec-save').disabled=!ok;$('#vec-copy').disabled=!ok;
+  $('#vec-stop').hidden=!VEC.busy;
+  $('#vec-redo').disabled=VEC.busy||!VEC.blob;
+  $('#vec-tools').setAttribute('aria-busy',VEC.busy?'true':'false');
+}
+async function vecRun(){
+  const st=$('#vec-status');
+  if(!VEC.blob||VEC.busy)return;
+  const sample=await useCap('sample');
+  if(!sample){st.textContent='La lecture automatique n’est pas disponible ici. Utilisez la méthode « Sans accès à Claude » ci-dessous.';$('#vec-manual').open=true;return;}
+  let caps=null;try{caps=await sample.limits();}catch(e){}
+  if(!caps||!caps.images){st.textContent='L’envoi d’images à Claude n’est pas disponible ici. Utilisez la méthode « Sans accès à Claude » ci-dessous.';$('#vec-manual').open=true;return;}
+  VEC.busy=true;VEC.ctl=new AbortController();VEC.geo=null;VEC.xml='';$('#vec-notes').textContent='';
+  st.textContent='Claude lit le croquis… 10 à 60 secondes.';setVecUi();
+  try{
+    VEC.geo=await sample.json(VEC_PROMPT,{images:[VEC.blob],signal:VEC.ctl.signal,cache:false});
+    VEC.busy=false;vecRefresh();
+  }catch(e){
+    VEC.busy=false;
+    st.textContent=VEC_ERR[e&&e.code]||VEC_ERR.upstream_error;
+  }
+  VEC.busy=false;VEC.ctl=null;setVecUi();
+}
+async function vecPhoto(file){
+  if(!file||VEC.busy)return;
+  try{
+    const b=await shrink(file);
+    const bmp=await createImageBitmap(b);
+    VEC.blob=b;VEC.w=bmp.width;VEC.h=bmp.height;VEC.assumed=false;
+    if(VEC.url)URL.revokeObjectURL(VEC.url);
+    VEC.url=URL.createObjectURL(b);
+    const im=$('#vec-thumb');im.src=VEC.url;im.hidden=false;
+  }catch(e){toast('Photo illisible.');return;}
+  $('#vec-prev').textContent='';
+  vecRun();
+}
+function vecBytes(str){const u=new Uint8Array(str.length);for(let i=0;i<str.length;i++){const c=str.charCodeAt(i);u[i]=c<256?c:63;}return u;}
+function vecSay(t){const n=$('#vec-msg');n.textContent=t||'';n.hidden=!t;}
+/* image PNG du plan (fond blanc) */
+function vecCanvas(comp,k){
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  comp.forEach(c=>c.p.forEach(q=>{x0=Math.min(x0,q[0]);y0=Math.min(y0,q[1]);x1=Math.max(x1,q[0]);y1=Math.max(y1,q[1]);}));
+  const pd=30,cv=document.createElement('canvas');
+  cv.width=Math.round((x1-x0+2*pd)*k);cv.height=Math.round((y1-y0+2*pd)*k);
+  const g=cv.getContext('2d');
+  g.fillStyle='#fff';g.fillRect(0,0,cv.width,cv.height);
+  const T=q=>[(q[0]-x0+pd)*k,(q[1]-y0+pd)*k];
+  const seg=(a,b,col,w)=>{g.strokeStyle=col;g.lineWidth=w*k;g.lineCap='butt';g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke();};
+  comp.filter(c=>c.t==='Mur').forEach(c=>{const a=T(c.p[0]),b=T(c.p[1]);g.lineCap='square';seg(a,b,'#222',13);seg(a,b,'#d9d9d9',9);});
+  comp.filter(c=>c.t==='Ligne').forEach(c=>seg(T(c.p[0]),T(c.p[1]),'#111',2));
+  comp.filter(c=>c.t==='PorteG'||c.t==='PorteD'||c.t==='Fenetre').forEach(c=>{
+    const a=T(c.p[0]),b=T(c.p[1]);
+    seg(a,b,'#fff',17);
+    if(c.t==='Fenetre'){[-3,0,3].forEach(o=>{const h=a[1]===b[1];seg(h?[a[0],a[1]+o*k]:[a[0]+o*k,a[1]],h?[b[0],b[1]+o*k]:[b[0]+o*k,b[1]],'#111',1);});return;}
+    const h=Math.abs(a[1]-b[1])<1e-6,L=Math.hypot(b[0]-a[0],b[1]-a[1]);
+    g.strokeStyle='#111';g.lineWidth=1.5*k;g.beginPath();
+    if(h){g.moveTo(a[0],a[1]);g.lineTo(a[0],a[1]-L);g.moveTo(b[0],b[1]);g.arc(a[0],a[1],L,0,-Math.PI/2,true);}
+    else{g.moveTo(a[0],a[1]);g.lineTo(a[0]+L,a[1]);g.moveTo(b[0],b[1]);g.arc(a[0],a[1],L,Math.PI/2,0,true);}
+    g.stroke();
+  });
+  g.fillStyle='#111';g.textBaseline='top';
+  comp.filter(c=>c.t==='Texte').forEach(c=>{const p=T(c.p[0]);g.font=(c.sz*k)+'px "Segoe UI", Arial, sans-serif';g.fillText(c.s,p[0],p[1]);});
+  return cv;
+}
+async function vecImages(){
+  const cv=vecCanvas(VEC.comp,2),g=cv.getContext('2d');
+  const png=await new Promise(r=>cv.toBlob(r,'image/png'));
+  return {png};
+}
+async function vecSave(){
+  if(!VEC.xml)return;
+  const base=slug($('#vec-titre').value||'Plan');
+  const blob=new Blob([vecBytes(VEC.xml)],{type:'application/octet-stream'});
+  vecSay('');
+  let im=null;try{im=await vecImages();}catch(e){}
+  const dl=await useCap('downloads');
+  const out=[];
+  if(dl){
+    const tryList=async list=>{
+      for(const it of list){
+        try{await dl.save({filename:base+'.'+it[0],data:it[1]});return it[0];}
+        catch(e){
+          const c=e&&e.code;
+          if(c==='declined')return 'declined';
+          if(c!=='rejected_extension'&&c!=='extension_not_enabled')return 'error:'+(c||'');
+        }
+      }
+      return null;
+    };
+    const a=await tryList([['vecXml',blob],['txt',blob]]);
+    if(a==='declined'){vecSay('Enregistrement annulé.');return;}
+    if(a==='vecXml')out.push('Plan : '+base+'.vecXml');
+    else if(a==='txt')out.push('Plan : '+base+'.txt (à renommer en .vecXml)');
+    else out.push('Plan non enregistré ('+(a||'format refusé')+') : utilisez « Copier le XML »');
+    if(im){
+      const b=await tryList([['png',im.png]]);
+      if(b==='png')out.push('Image : '+base+'.png');
+      else if(b!=='declined')out.push('Image non enregistrée');
+    }
+    vecSay(out.join(' · '));
+    return;
+  }
+  const grab=(blob2,name)=>{const url=URL.createObjectURL(blob2);const a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);};
+  try{
+    grab(blob,base+'.vecXml');
+    if(im)setTimeout(()=>grab(im.png,base+'.png'),400);
+    vecSay('Téléchargés : '+base+'.vecXml'+(im?' et '+base+'.png':''));
+  }catch(e){vecSay('Téléchargement impossible. Utilisez « Copier le XML ».');}
+}
+async function vecCopy(){
+  if(!VEC.xml)return;
+  try{await navigator.clipboard.writeText(VEC.xml);vecSay('XML copié. Collez-le dans un fichier texte nommé '+slug($('#vec-titre').value||'Plan')+'.vecXml.');}
+  catch(e){vecSay('Copie refusée dans cet affichage.');}
+}
+async function vecCopyPrompt(){
+  try{await navigator.clipboard.writeText(VEC_PROMPT);vecSay('Consigne copiée. Collez-la dans l’appli de votre IA, avec la photo.');}
+  catch(e){const b=$('#vec-promptbox');b.value=VEC_PROMPT;b.hidden=false;b.focus();b.select();vecSay('Copie refusée : sélectionnez et copiez la consigne ci-dessous.');}
+}
+function vecApply(){
+  const t=$('#vec-paste').value.trim(),i=t.indexOf('{'),j=t.lastIndexOf('}');
+  if(i<0||j<i){vecSay('Collez la réponse complète : elle commence par { et finit par }.');return;}
+  try{VEC.geo=JSON.parse(t.slice(i,j+1));}catch(e){vecSay('Réponse illisible. Redemandez le JSON seul, sans commentaire.');return;}
+  if(!VEC.blob||!VEC.w){VEC.w=1500;VEC.h=2000;VEC.assumed=true;}
+  vecSay('');vecRefresh();
+  if(VEC.assumed&&VEC.xml)$('#vec-notes').append(el('li',null,'Photo non fournie : proportions supposées, photo en portrait 3 sur 4.'));
+}
+function vecOpen(){$('#vec-titre').value='Plan';setVecUi();}
+$('#vec-cam').addEventListener('change',e=>{vecPhoto(e.target.files[0]);e.target.value='';});
+$('#vec-gal').addEventListener('change',e=>{vecPhoto(e.target.files[0]);e.target.value='';});
+$('#vec-mirror').addEventListener('change',vecRefresh);
+$('#vec-titre').addEventListener('change',vecRefresh);
+$('#vec-redo').addEventListener('click',vecRun);
+$('#vec-stop').addEventListener('click',()=>{if(VEC.ctl)VEC.ctl.abort();});
+$('#vec-save').addEventListener('click',vecSave);
+$('#vec-copy').addEventListener('click',vecCopy);
+$('#vec-copyprompt').addEventListener('click',vecCopyPrompt);
+$('#vec-apply').addEventListener('click',vecApply);
+
+
+vecOpen();
+})();
+</script>
+
+<script>if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(function(){});</script>
+</body></html>
